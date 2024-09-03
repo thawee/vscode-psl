@@ -156,6 +156,18 @@ export class MtmConnection {
 		}
 	}
 
+	async getSCAER(seq: string) {
+		try {
+			this.isSql = false
+			let returnString = await this._getSCAER(seq)
+			return returnString
+		}
+		catch (err) {
+			this.close();
+			throw new Error(err.toString());
+		}
+	}
+
 	private async _send(filename: string) {
 		let returnString: string;
 		let fileString: string = (await readFileAsync(filename, {encoding: this.encoding})).toString(this.encoding);
@@ -262,6 +274,22 @@ export class MtmConnection {
 		return returnString;
 	}
 
+	private async _getSCAER(seq: string) {
+		let returnString: string;
+		let selectStatement = `SELECT COUNT(*) FROM ERROR9 WHERE SEQ='${seq}' `;
+		this.recordCount = Number(await this._sqlQuery(selectStatement))
+		selectStatement = `SELECT * FROM ERROR9 WHERE SEQ='${seq}' `;
+		//this.recordCount = Number(await this._sqlQuery(selectStatement))
+		returnString = await this._sqlQuery(selectStatement)
+		/*columnList = returnString.split('\r\n');
+		returnString = tableReturnString
+		for (let i = 0; i < columnList.length; i++) {
+			fileName = fileDetails.fileName + '-' + columnList[i] + '.COL'
+			returnString = returnString + String.fromCharCode(0) + fileName + String.fromCharCode(1) + await this._get(fileName)
+		}*/
+		return returnString;
+	}
+
 	private async _sqlQuery(selectQuery: string) {
 		selectQuery = selectQuery.toUpperCase()
 		if (!selectQuery.startsWith('SELECT')) {
@@ -287,16 +315,16 @@ export class MtmConnection {
 		let rows = 'ROWS=' + this.maxRow;
 		let prepareString = utils.sqlObject(fetchCursor, rows)
 		let returnString = await this.execute({ serviceClass: ServiceClass.SQL }, prepareString);
-		let splitReturnSring: string[] = returnString.split(String.fromCharCode(0))
-		let totalCount = Number(splitReturnSring[0]);
-		returnString = splitReturnSring[1];
+		let splitReturnString: string[] = returnString.split(String.fromCharCode(0))
+		let totalCount = Number(splitReturnString[0]);
+		returnString = splitReturnString[1];
 		if (this.isSql === false) {
 			while ((totalCount < this.recordCount)) {
-				splitReturnSring = [];
+				splitReturnString = [];
 				let nextReturnString = await this.execute({ serviceClass: ServiceClass.SQL }, prepareString);
-				splitReturnSring = nextReturnString.split(String.fromCharCode(0))
-				totalCount = totalCount + Number(splitReturnSring[0]);
-				returnString = returnString + '\r\n' + splitReturnSring[1]
+				splitReturnString = nextReturnString.split(String.fromCharCode(0))
+				totalCount = totalCount + Number(splitReturnString[0]);
+				returnString = returnString + '\r\n' + splitReturnString[1]
 			}
 		}
 		return returnString

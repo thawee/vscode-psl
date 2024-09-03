@@ -2,7 +2,7 @@
   "name": "vscode-psl",
   "displayName": "vscode-psl",
   "description": "Profile Scripting Language support",
-  "version": "1.13.4",
+  "version": "1.13.4.1",
   "preview": true,
   "publisher": "ing-bank",
   "engines": {
@@ -19,6 +19,7 @@
     "onCommand:psl.getElement",
     "onCommand:psl.refreshElement",
     "onCommand:psl.getTable",
+    "onCommand:psl.getSCAER",
     "onCommand:psl.testCompile",
     "onCommand:psl.configureEnvironment",
     "onCommand:psl.sendElement",
@@ -222,7 +223,12 @@
       },
       {
         "command": "psl.getTable",
-        "title": "Table Get from Host",
+        "title": "Get Table from Host",
+        "category": "PSL"
+      },
+      {
+        "command": "psl.getSCAER",
+        "title": "SCAER from Host",
         "category": "PSL"
       },
       {
@@ -531,6 +537,10 @@
         },
         {
           "command": "psl.getTable",
+          "group": "PSL.4"
+        },
+        {
+          "command": "psl.getSCAER",
           "group": "PSL.4"
         },
         {

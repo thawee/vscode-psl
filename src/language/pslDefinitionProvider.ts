@@ -6,8 +6,8 @@ import * as lang from './lang';
 
 export class PSLDefinitionProvider implements vscode.DefinitionProvider {
 
-	async provideDefinition(document: vscode.TextDocument, position: vscode.Position, cancellationToknen: vscode.CancellationToken): Promise<vscode.Definition | undefined> {
-		if (cancellationToknen.isCancellationRequested) return;
+	async provideDefinition(document: vscode.TextDocument, position: vscode.Position, cancellationToken: vscode.CancellationToken): Promise<vscode.Definition | undefined> {
+		if (cancellationToken.isCancellationRequested) return;
 		let parsedDoc = parser.parseText(document.getText());
 
 		// get tokens on line and current token
