@@ -1,3 +1,6 @@
+.github/**
+.github/ISSUE_TEMPLATE/**
+.github/workflows/**
 .vscode/**
 .vscode-test/**
 out/test/**

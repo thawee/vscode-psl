@@ -19,9 +19,13 @@ export async function getElementHandler(context: utils.ExtensionCommandContext):
 			// skeptical of this approach
 			return;
 		}
+		// support text selection on editor/output panel
+		let input = "";
 		const editor = vscode.window.activeTextEditor; 
-		var selection = editor.selection; 
-		var input = editor.document.getText(selection);
+		if(editor) {
+			var selection = editor.selection; 
+			input = editor.document.getText(selection);
+		}
 		input = await promptUserForComponent(input);
 		if (!input) return;
 		let extension = path.extname(input).replace('.', '');
@@ -46,7 +50,14 @@ export async function getElementHandler(context: utils.ExtensionCommandContext):
 		let quickPick = await environment.workspaceQuickPick();
 		if (!quickPick) return;
 		let chosenEnv = quickPick;
-		let input = await promptUserForComponent("");
+		// support text selection on editor/output panel
+		let input = "";
+		const editor = vscode.window.activeTextEditor; 
+		if(editor) {
+			var selection = editor.selection; 
+			input = editor.document.getText(selection);
+		}
+		input = await promptUserForComponent(input);
 		if (!input) return;
 		let extension = path.extname(input).replace('.', '');
 		let description = utils.extensionToDescription[extension]
@@ -331,7 +342,14 @@ export async function getSCAERHandler(context: utils.ExtensionCommandContext) {
 		let quickPick = await environment.workspaceQuickPick();
 		if (!quickPick) return;
 		let chosenEnv = quickPick;
-		let seq = await promptUserForSCAER("");
+		// support text selection on editor/output panel
+		let seq = "";
+		const editor = vscode.window.activeTextEditor; 
+		if(editor) {
+			var selection = editor.selection; 
+			seq = editor.document.getText(selection);
+		}
+		seq = await promptUserForSCAER(seq);
 		if (!seq) return;
 		let scaerDir = DIR_MAPPINGS['SCAER']
 		let target;
@@ -342,7 +360,7 @@ export async function getSCAERHandler(context: utils.ExtensionCommandContext) {
 			target = await vscode.window.showOpenDialog({ defaultUri: vscode.Uri.file(chosenEnv.description), canSelectFiles: false, canSelectFolders: true, canSelectMany: false, filters: { 'SCAER Directory': [] } });
 		}
 		if (!target) return;
-		return getTable(seq, target[0].fsPath, chosenEnv.description).catch(() => { });
+		return getSCAER(seq, target[0].fsPath).catch(() => { });
 	}
 	return;
 }

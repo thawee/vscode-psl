@@ -35,6 +35,7 @@ export const enum ContextMode {
 	FILE = 1,
 	DIRECTORY = 2,
 	EMPTY = 3,
+	OUTPUT =4,
 }
 
 const enum NEWLINE_SETTING {
@@ -70,8 +71,10 @@ export function getFullContext(context: ExtensionCommandContext | undefined): Ho
 		return { fsPath, mode };
 	}
 	else {
-		fsPath = context.fsPath;
-		mode = fs.lstatSync(fsPath).isFile() ? ContextMode.FILE : ContextMode.DIRECTORY;
+		fsPath = context.fsPath; 
+		if(fs.existsSync(fsPath)) {
+			mode = fs.lstatSync(fsPath).isFile() ? ContextMode.FILE : ContextMode.DIRECTORY;
+		}else mode = ContextMode.OUTPUT;
 		return { fsPath, mode };
 	}
 }
