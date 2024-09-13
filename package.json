@@ -19,13 +19,14 @@
     "onCommand:psl.getElement",
     "onCommand:psl.refreshElement",
     "onCommand:psl.getTable",
-    "onCommand:psl.getSCAER",
     "onCommand:psl.testCompile",
     "onCommand:psl.configureEnvironment",
     "onCommand:psl.sendElement",
     "onCommand:psl.compileAndLink",
     "onCommand:psl.runPSL",
-    "onCommand:psl.launchHostTerminal"
+    "onCommand:psl.launchHostTerminal",
+    "onCommand:psl.getSCAER",
+    "onCommand:psl.runSQL"
   ],
   "main": "./out/src/extension",
   "contributes": {
@@ -223,12 +224,17 @@
       },
       {
         "command": "psl.getTable",
-        "title": "Get Table from Host",
+        "title": "Table Get from Host",
         "category": "PSL"
       },
       {
         "command": "psl.getSCAER",
-        "title": "SCAER from Host",
+        "title": "Get SCAER log from Host",
+        "category": "PSL"
+      },
+      {
+        "command": "psl.runSQL",
+        "title": "Run Query on Host",
         "category": "PSL"
       },
       {
@@ -542,7 +548,7 @@
         {
           "command": "psl.getSCAER",
           "group": "PSL.4"
-        },
+        }, 
         {
           "when": "resourceLangId == psl",
           "command": "psl.testCompile",

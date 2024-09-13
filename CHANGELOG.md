@@ -3,15 +3,15 @@
 All notable changes to the "vscode-psl" extension will be documented in this
 file.
 
-## v1.13.4.1
-* Add get SCAER info command
-* Update Get Element to default element name from selected text on editor
-
 ## v1.13.4
 
 * Update the `json5` dependency to 2.2.3 and increment version numbers. Note
   that this change is similar to 1.12.2, as the 1.13 version is a split from
   1.12 for now.
+* Add get SCAER log command
+* Update Get Element to default element name from selected text on editor
+* Update Table Get and Get Elements to work from output panel
+* Update get element to search element and show matched results in quickpick
 
 ## v1.13.3
 

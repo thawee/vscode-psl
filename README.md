@@ -49,6 +49,7 @@ Commands to communicate with the Host via MRPC121 can be executed via the Comman
 * `Table Refresh from Host`: Fetches all elements related to an existing table element
 * `Table Send to Host`: Sends all existing elements related to the table
 * `Test Compile`: Test compiles PSL
+* `SCAER log from Host`: Get Profile ERROR log and variables 
 
 > Please note that the Host Communication is done *asynchronously*, meaning that vscode will not require you to wait to finish one action before you start another. This may have unintended consequences if you do not wait. For example, you must wait for sending to finish before you compile and link.
 
@@ -71,6 +72,7 @@ RPT | `dataqwik/report/` |
 SCR | `dataqwik/screen/` |
 table files (TBL and COL) | `dataqwik/table/{table_name}/` |
 TRIG | `dataqwik/trigger/` |
+SCAER| `errorlog`
 
 If an element is not in the table, a prompt will ask where it should be saved.
 

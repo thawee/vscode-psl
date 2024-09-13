@@ -4,13 +4,14 @@ import * as path from 'path';
 import * as fs from 'fs-extra';
 import * as environment from '../common/environment';
 import { MumpsVirtualDocument } from '../language/mumps';
+import { getObjectType } from '../mtm/utils';
 
 const icon = utils.icons.GET;
 
 export async function getElementHandler(context: utils.ExtensionCommandContext): Promise<void> {
 	let c = utils.getFullContext(context);
 	if (c.mode === utils.ContextMode.DIRECTORY) {
-		let input = await promptUserForComponent("");
+		let input = await promptUserForElement("",c.fsPath);
 		if (input) return getElement(path.join(c.fsPath, input)).catch(() => { });
 	}
 	else if (c.mode === utils.ContextMode.FILE) {
@@ -20,13 +21,13 @@ export async function getElementHandler(context: utils.ExtensionCommandContext):
 			return;
 		}
 		// support text selection on editor/output panel
-		let input = "";
+		let selected:string = "";
 		const editor = vscode.window.activeTextEditor; 
 		if(editor) {
-			var selection = editor.selection; 
-			input = editor.document.getText(selection);
+			const selection = editor.selection; 
+			selected = editor.document.getText(selection);
 		}
-		input = await promptUserForComponent(input);
+		let input = await promptUserForElement(selected, c.fsPath);
 		if (!input) return;
 		let extension = path.extname(input).replace('.', '');
 		let description = utils.extensionToDescription[extension]
@@ -57,7 +58,7 @@ export async function getElementHandler(context: utils.ExtensionCommandContext):
 			var selection = editor.selection; 
 			input = editor.document.getText(selection);
 		}
-		input = await promptUserForComponent(input);
+		input = await promptUserForElement(input,c.fsPath);
 		if (!input) return;
 		let extension = path.extname(input).replace('.', '');
 		let description = utils.extensionToDescription[extension]
@@ -308,6 +309,134 @@ async function getSCAER(scaseq: string, targetDirectory: string) {
 	return;
 }
 
+function getElementList(quickpick: vscode.QuickPick<vscode.QuickPickItem>, elmName: string, elmType: string, targetDirectory: string) {
+	let env; 
+    utils.executeWithProgress(`${icon} search ${elmType} for ${elmName}`, async () => {
+		let envs;
+		try {
+			envs = await utils.getEnvironment(targetDirectory);
+		}
+		catch (e) {
+			utils.logger.error(`${utils.icons.ERROR} ${icon} Invalid environment configuration.`);
+			return;
+		}
+		if (envs.length === 0) {
+			utils.logger.error(`${utils.icons.ERROR} ${icon} No environments selected.`);
+			return;
+		}
+		let choice = await utils.getCommandenvConfigQuickPick(envs);
+		if (!choice) return;
+		env = choice;
+		utils.logger.info(`${utils.icons.WAIT} ${icon} ${elmName}*.${elmType} SEARCH on ${env.name}`);
+		let connection = await utils.getConnection(env);
+		let sql = getSQLForElementList(elmName, elmType);
+		if(sql) {
+			let returnString = await connection.sqlQuery(sql); 
+			utils.logger.info(`${utils.icons.SUCCESS} ${icon} ${elmName}*.${elmType} SEARCH on ${env.name} succeeded`);
+			connection.close();
+			if(returnString) {
+				let items: vscode.QuickPickItem[] = [];
+				let columnList: string[];
+				let elmString: string[]; 
+				columnList = returnString.split('\r\n');
+				for (let i = 0; i < columnList.length; i++) {
+					elmString = columnList[i].split('\t');
+					let label = elmString[0]+"."+elmType;
+					let desc = elmString[1];
+					if(elmString.length ==3) {
+						label = elmString[0]+"-"+elmString[1]+"."+elmType;
+						desc = elmString[2];
+					}
+					let item : vscode.QuickPickItem = {
+						label: label,
+						description: desc,
+						alwaysShow: true
+					};
+					items.push(item);
+				}
+				quickpick.items = items;
+			}
+		}else {
+			// to support type that cannot get list from host 
+			let fileDetail = getObjectType(elmName+"."+elmType);
+			let item : vscode.QuickPickItem = {
+				label: elmName+"."+elmType,
+				description: fileDetail.fileId,
+				alwaysShow: true
+			};
+			quickpick.items = [item];
+		}
+	}).catch((e: Error) => {
+		if (env && env.name) {
+			utils.logger.error(`${utils.icons.ERROR} ${icon} error in ${env.name} ${e.message}`);
+		}
+		else {
+			utils.logger.error(`${utils.icons.ERROR} ${icon} ${e.message}`);
+		}
+	})
+	return;
+}
+
+function getSQLForElementList(elmName: string, elmType: string) {
+	let sql = "";
+    if("DAT" == elmType) {
+		sql = "SELECT FID, DES FROM DBTBL1 WHERE FID LIKE '"+elmName+"%'";
+	}else if("FKY" == elmType) {
+		// name : FID-FKEYS.FKY
+		let names = elmName.split("-");
+		let table = names[0];
+		let tid = names[1];
+		if(tid) {
+			sql = "SELECT FID, FKEYS, FKEYS FROM DBTBL1F WHERE FID LIKE '"+table+"%' AND FKEYS LIKE '"+tid+"%'";
+		}else {
+			sql = "SELECT FID, FKEYS, FKEYS FROM DBTBL1F WHERE FID LIKE '"+table+"%'";
+		}
+	}else if("IDX" == elmType) {
+		// name : FID-INDEXNM.IDX
+		let names = elmName.split("-");
+		let table = names[0];
+		let tid = names[1];
+		if(tid) {
+			sql = "SELECT FID, INDEXNM, IDXDESC FROM DBTBL8 WHERE FID LIKE '"+table+"%' AND INDEXNM LIKE '"+tid+"%'";
+		}else {
+			sql = "SELECT FID, INDEXNM, IDXDESC FROM DBTBL8 WHERE FID LIKE '"+table+"%'";
+		}
+	}else if("JFD" == elmType) {
+		// name : FID-INDEXNM.JFD
+		let names = elmName.split("-");
+		let table = names[0];
+		let tid = names[1];
+		if(tid) {
+			sql = "SELECT PRITABLE, JRNID, DES FROM DBTBL9 WHERE PRITABLE LIKE '"+table+"%' AND JRNID LIKE '"+tid+"%'";
+		}else {
+			sql = "SELECT PRITABLE, JRNID, DES FROM DBTBL9 WHERE PRITABLE LIKE '"+table+"%'";
+		}
+    }else if("PPL" == elmType) {
+		sql = "SELECT PID, DESC FROM DBTBL13 WHERE PID LIKE '"+elmName+"%'";
+	}else if("PROC" == elmType) {
+	   sql = "SELECT PROCID, DES FROM DBTBL25 WHERE PROCID LIKE '"+elmName+"%'";
+    }else if("BATCH" == elmType) {
+		sql = "SELECT BCHID, DES FROM DBTBL33 WHERE BCHID LIKE '"+elmName+"%'";
+	}else if("QRY" == elmType) {
+		sql = "SELECT QID, DESC FROM DBTBL4 WHERE QID LIKE '"+elmName+"%'";
+	}else if("RPT" == elmType) {
+		sql = "SELECT RID, DESC FROM DBTBL5H WHERE RID LIKE '"+elmName+"%'";
+	}else if("SCR" == elmType) {
+		sql = "SELECT SID, DES FROM DBTBL2 WHERE SID LIKE '"+elmName+"%'";
+	}else if("TRIG" == elmType) {
+		// name : TABLE-TRGID.TRIG
+		let triggers = elmName.split("-");
+		let table = triggers[0];
+		let tid = triggers[1];
+		if(tid) {
+			sql = "SELECT TABLE, TRGID, DES FROM DBTBL7 WHERE TABLE LIKE '"+table+"%' AND TRGID LIKE '"+tid+"%'";
+		}else {
+			sql = "SELECT TABLE, TRGID, DES FROM DBTBL7 WHERE TABLE LIKE '"+table+"%'";
+		}
+	}
+	return sql;
+}
+
 export async function getSCAERHandler(context: utils.ExtensionCommandContext) {
 	let c = utils.getFullContext(context);
 	if (c.mode === utils.ContextMode.DIRECTORY) {
@@ -323,8 +452,11 @@ export async function getSCAERHandler(context: utils.ExtensionCommandContext) {
 		const editor = vscode.window.activeTextEditor; 
 		var selection = editor.selection; 
 		var seq = editor.document.getText(selection);
-        // prompt for seq if not selected on editor 
-		seq = await promptUserForSCAER(seq); 
+       
+		if (!seq) { 
+			  // prompt for seq if not selected on editor
+			seq = await promptUserForSCAER(seq); 
+		}
 		if (!seq) return;
 
 		let scaerDir = DIR_MAPPINGS['SCAER']
@@ -349,7 +481,10 @@ export async function getSCAERHandler(context: utils.ExtensionCommandContext) {
 			var selection = editor.selection; 
 			seq = editor.document.getText(selection);
 		}
-		seq = await promptUserForSCAER(seq);
+		if (!seq) { 
+			// prompt for seq if not selected on editor
+		  seq = await promptUserForSCAER(seq); 
+	    }
 		if (!seq) return;
 		let scaerDir = DIR_MAPPINGS['SCAER']
 		let target;
@@ -365,17 +500,46 @@ export async function getSCAERHandler(context: utils.ExtensionCommandContext) {
 	return;
 }
 
-async function promptUserForComponent(input: string) {
-	let inputOptions: vscode.InputBoxOptions = {
-		value: input,
-		prompt: 'Name of Component (with extension)', validateInput: (input: string) => {
-			if (!input) return;
-			let extension = path.extname(input) ? path.extname(input).replace('.', '') : 'No extension'
-			if (extension in utils.extensionToDescription) return '';
-			return `Invalid extension (${extension})`;
-		}
-	};
-	return vscode.window.showInputBox(inputOptions);
+async function promptUserForElement(input: string, targetDirectory: string):Promise<any> { 
+	return new Promise((resolve) => {
+		const quickpick = vscode.window.createQuickPick();
+		quickpick.title = "Get Profile Element";
+		quickpick.placeholder = "Name of Profile Element, with extension (ext:name or name.ext)";
+		quickpick.canSelectMany = false;
+		quickpick.ignoreFocusOut = true;
+		quickpick.value = input;
+		quickpick.onDidChangeValue(() => { 
+			// INJECT procedure list into proposed values
+			let separators: RegExp = /[:.]+/;
+			let elmStrings = quickpick.value.split(separators); 
+			let elm = elmStrings[0]?.trim();
+			let ext = elmStrings[1]?.trim();
+			if(quickpick.value.includes(':')) {
+				// swap elm and type for :
+				elm = elmStrings[1]?.trim();
+				ext = elmStrings[0]?.trim();
+			}
+			if (!ext) {
+				ext = "PROC";
+			}
+			if(elm?.length >= 3) {
+				quickpick.busy = true; 
+				quickpick.items = []; // reset quickpick items
+				try {
+					getElementList(quickpick, elm, ext, targetDirectory)
+				}catch (e) {}
+				quickpick.busy = false;
+			}
+		});
+		quickpick.onDidAccept(() =>{
+			const selection = quickpick.activeItems[0]
+            resolve(selection.label)
+            quickpick.hide()
+		});
+		quickpick.onDidHide(() => resolve(""));
+		quickpick.show(); 
+	 
+	});
 }
 
 async function promptUserForTable() {
@@ -388,7 +552,6 @@ async function promptUserForTable() {
 	};
 	return vscode.window.showInputBox(inputOptions);
 }
-
 
 async function promptUserForSCAER(input: string) {
 	let inputOptions: vscode.InputBoxOptions = {

@@ -12,6 +12,7 @@ import {
 } from './runCustom';
 import { sendElementHandler, sendTableHandler } from './send';
 import { testCompileHandler } from './testCompile';
+import { runSQLHandler } from './sql';
 
 const PROFILE_ELEMENTS = [
 	'.FKY',
@@ -50,6 +51,7 @@ export function activate(context: vscode.ExtensionContext) {
 		{ id: 'psl.sendTable', callback: sendTableHandler },
 		{ id: 'psl.refreshTable', callback: refreshTableHandler },
 		{ id: 'psl.getSCAER', callback: getSCAERHandler },
+		{ id: 'psl.runSQL', callback: runSQLHandler },
 		// Custom commands
 		// { id: 'psl.getCompiledCode', callback: getCompiledCodeHandler },
 		{ id: `psl.${testContext.command}`, callback: runTestHandler },
