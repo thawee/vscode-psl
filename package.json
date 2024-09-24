@@ -25,8 +25,7 @@
     "onCommand:psl.compileAndLink",
     "onCommand:psl.runPSL",
     "onCommand:psl.launchHostTerminal",
-    "onCommand:psl.getSCAER",
-    "onCommand:psl.runSQL"
+    "onCommand:psl.getSCAER"
   ],
   "main": "./out/src/extension",
   "contributes": {
@@ -186,7 +185,7 @@
       "[profileTable]": {
         "editor.insertSpaces": false
       }
-    },
+    }, 
     "commands": [
       {
         "command": "psl.setGtmDebug",
@@ -231,12 +230,7 @@
         "command": "psl.getSCAER",
         "title": "Get SCAER log from Host",
         "category": "PSL"
-      },
-      {
-        "command": "psl.runSQL",
-        "title": "Run Query on Host",
-        "category": "PSL"
-      },
+      }, 
       {
         "command": "psl.testCompile",
         "title": "Test Compile",
@@ -320,7 +314,7 @@
           "when": "explorerResourceIsFolder",
           "command": "psl.getTable",
           "group": "PSL.3"
-        },
+        }, 
         {
           "when": "explorerResourceIsFolder",
           "command": "psl.testCompile",
@@ -548,7 +542,7 @@
         {
           "command": "psl.getSCAER",
           "group": "PSL.4"
-        }, 
+        },
         {
           "when": "resourceLangId == psl",
           "command": "psl.testCompile",
@@ -759,6 +753,10 @@
       {
         "command": "psl.launchHostTerminal",
         "key": "win+oem_3"
+      },
+      { 
+        "command": "psl.getElement",
+        "key": "cmd+g"
       }
     ],
     "configuration": {

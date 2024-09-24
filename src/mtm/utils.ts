@@ -301,8 +301,8 @@ function getFileDetails(fileExtension: string) {
 export function getDbtblInfo(fileId: string): string {
 	switch (fileId) {
 		case 'Batch': return 'DBTBL33';
-		case 'Column': return 'DBTBL25';
-		case 'Procedure': return 'DBTBL1';
+		case 'Column': return 'DBTBL1D'; //return 'DBTBL25';
+		case 'Procedure': return 'DBTBL25'; //return 'DBTBL1';
 		case 'Table': return 'DBTBL1';
 		default: return 'Unknown Type';
 	}
@@ -343,4 +343,10 @@ function mrpcConnMessage(): string {
 
 function netConnMessage(): string {
 	return String.fromCharCode(21, 2) + '5' + String.fromCharCode(6) + 'ICODE' + String.fromCharCode(2) + '1' + String.fromCharCode(8) + 'PREPARE' + String.fromCharCode(2) + '3';
+}
+
+export function extractTableName(sql: string): string | null {
+    const regex = /SELECT\s+.*\s+FROM\s+(\w+)/i;
+    const match = sql.match(regex);
+    return match ? match[1] : null;
 }

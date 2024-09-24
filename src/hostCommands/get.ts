@@ -309,6 +309,56 @@ async function getSCAER(scaseq: string, targetDirectory: string) {
 	return;
 }
 
+function getElementTypes(quickpick: vscode.QuickPick<vscode.QuickPickItem>) {
+	let topPickedTypes:string[] = ['PROC','BATCH','TRIG'];
+	let supportedTypes:string[] = ['FKY','IDX','JFD','PPL','QRY','RPT','SCR'];
+	let items: vscode.QuickPickItem[] = [];
+
+	let item : vscode.QuickPickItem = {
+		label: "Top Picked Types",
+		description: "",
+		alwaysShow: true,
+		kind: vscode.QuickPickItemKind.Separator
+		
+	};
+	items.push(item);
+
+	topPickedTypes.forEach((typ) => {
+		// to support type that cannot get list from host 
+		let fileDetail = getObjectType(typ+"."+typ);
+		let item : vscode.QuickPickItem = {
+			label: typ,
+			description: fileDetail.fileId,
+			alwaysShow: true
+			
+		};
+		items.push(item);
+	});
+
+	let sep2 : vscode.QuickPickItem = {
+		label: "Other Supported Types",
+		description: "",
+		alwaysShow: true,
+		kind: vscode.QuickPickItemKind.Separator
+		
+	};
+	items.push(sep2);
+	supportedTypes.forEach((typ) => {
+		// to support type that cannot get list from host 
+		let fileDetail = getObjectType(typ+"."+typ);
+		let item : vscode.QuickPickItem = {
+			label: typ,
+			description: fileDetail.fileId,
+			alwaysShow: true
+			
+		};
+		items.push(item);
+	});
+	quickpick.items = items;
+	
+	return;
+}
+
 function getElementList(quickpick: vscode.QuickPick<vscode.QuickPickItem>, elmName: string, elmType: string, targetDirectory: string) {
 	let env; 
     utils.executeWithProgress(`${icon} search ${elmType} for ${elmName}`, async () => {
@@ -504,37 +554,58 @@ async function promptUserForElement(input: string, targetDirectory: string):Prom
 	return new Promise((resolve) => {
 		const quickpick = vscode.window.createQuickPick();
 		quickpick.title = "Get Profile Element";
-		quickpick.placeholder = "Name of Profile Element, with extension (ext:name or name.ext)";
+		quickpick.placeholder = "Element name and type (pick supported element type from list)";
 		quickpick.canSelectMany = false;
 		quickpick.ignoreFocusOut = true;
 		quickpick.value = input;
+		let searchMode:string = "TYPE";
+		try {
+			getElementTypes(quickpick)
+		}catch (e) {}
 		quickpick.onDidChangeValue(() => { 
 			// INJECT procedure list into proposed values
 			let separators: RegExp = /[:.]+/;
 			let elmStrings = quickpick.value.split(separators); 
 			let elm = elmStrings[0]?.trim();
 			let ext = elmStrings[1]?.trim();
+		
 			if(quickpick.value.includes(':')) {
 				// swap elm and type for :
 				elm = elmStrings[1]?.trim();
 				ext = elmStrings[0]?.trim();
 			}
-			if (!ext) {
-				ext = "PROC";
-			}
-			if(elm?.length >= 3) {
+			quickpick.items = []; // reset quickpick items
+			if(((!ext) && elm?.length >= 3) || (ext && elm?.length >= 1)) {
+				if (!ext) {
+					ext = "PROC";
+				}
+				
 				quickpick.busy = true; 
-				quickpick.items = []; // reset quickpick items
+				searchMode = "ELEMENT"; 
 				try {
 					getElementList(quickpick, elm, ext, targetDirectory)
 				}catch (e) {}
 				quickpick.busy = false;
-			}
+			}else if(!ext) {
+				// display supported element types
+				quickpick.busy = true; 
+				searchMode = "TYPE"; 
+				try {
+					getElementTypes(quickpick)
+				}catch (e) {}
+				quickpick.busy = false;
+			} 
 		});
 		quickpick.onDidAccept(() =>{
-			const selection = quickpick.activeItems[0]
-            resolve(selection.label)
-            quickpick.hide()
+			if("ELEMENT" === searchMode) {
+				const selection = quickpick.activeItems[0]
+            	resolve(selection.label)
+            	quickpick.hide()
+			}else {
+				let oval = quickpick.value;
+				const selection = quickpick.activeItems[0]
+				quickpick.value = selection.label+": "+oval;
+			}
 		});
 		quickpick.onDidHide(() => resolve(""));
 		quickpick.show(); 

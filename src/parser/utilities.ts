@@ -46,6 +46,17 @@ export class ParsedDocFinder {
 						fsPath: finder.paths.activeRoutine,
 					};
 				}
+
+				// handle app class
+				let appPath = path.dirname(this.paths.activeRoutine);
+				const appClsNames = await getPslClsNames(appPath);
+				if (appClsNames.indexOf(callTokens[0].value) >= 0) {
+					finder = await finder.newFinder(callTokens[0].value);
+					return {
+						fsPath: finder.paths.activeRoutine,
+					};
+				}
+
 				const tableName = callTokens[0].value.replace('Record', '');
 				const fileDefinitionDirectory = await this.resolveFileDefinitionDirectory(tableName);
 				if (fileDefinitionDirectory) {
@@ -88,6 +99,15 @@ export class ParsedDocFinder {
 						finder = await finder.newFinder(token.value);
 						continue;
 					}
+
+					// handle app class
+					let appPath = path.dirname(this.paths.activeRoutine);
+					const appClsNames = await getPslClsNames(appPath);
+					if (appClsNames.indexOf(token.value) >= 0) {
+						finder = await finder.newFinder(token.value);
+						continue;
+					}
+
 					// skip over 'this'
 					else if (token.value === 'this' || token.value === this.procName) {
 						result = {

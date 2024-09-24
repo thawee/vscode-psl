@@ -10,7 +10,14 @@
         120
     ],
     "cSpell.words": [
+        "BCHID",
+        "duckdb",
+        "IDXDESC",
+        "JRNID",
+        "PRITABLE",
         "Rajkumar",
-        "Velusamy"
+        "TRGID",
+        "Velusamy",
+        "webviews"
     ] // Recommended typescript ruler
 }
