@@ -12,7 +12,7 @@ file.
 * Update Get Element to default element name from selected text on editor
 * Update Table Get and Get Elements to work from output panel
 * Update get element to search element and show matched results in quickpick
-* update provider to lookup PROC in current path as original PROC
+* update provider to lookup PROC from defaultPslSources, can be override in configuration 
 * update get element prompt to provide list of support element types
 
 ## v1.13.3

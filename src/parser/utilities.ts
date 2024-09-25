@@ -38,24 +38,26 @@ export class ParsedDocFinder {
 			const result = await finder.searchParser(callTokens[0]);
 
 			// check for core class or tables
-			if (!result) {
+			if (!result) { 
+				// handle all psl sources
+				for (const pslPath of this.paths.projectPsl) {
+					const pslClsNames = await getPslClsNames(pslPath);
+					if (pslClsNames.indexOf(callTokens[0].value) >= 0) {
+						finder = await finder.newFinder(callTokens[0].value);
+						return {
+							fsPath: finder.paths.activeRoutine,
+						};
+					}
+				}				
+
+				/*
 				const pslClsNames = await getPslClsNames(this.paths.corePsl);
 				if (pslClsNames.indexOf(callTokens[0].value) >= 0) {
 					finder = await finder.newFinder(callTokens[0].value);
 					return {
 						fsPath: finder.paths.activeRoutine,
 					};
-				}
-
-				// handle app class
-				let appPath = path.dirname(this.paths.activeRoutine);
-				const appClsNames = await getPslClsNames(appPath);
-				if (appClsNames.indexOf(callTokens[0].value) >= 0) {
-					finder = await finder.newFinder(callTokens[0].value);
-					return {
-						fsPath: finder.paths.activeRoutine,
-					};
-				}
+				}*/
 
 				const tableName = callTokens[0].value.replace('Record', '');
 				const fileDefinitionDirectory = await this.resolveFileDefinitionDirectory(tableName);
@@ -93,31 +95,37 @@ export class ParsedDocFinder {
 				const token = callTokens[index];
 
 				if (index === 0) {
+					// handle all psl sources
+					let foundPSL = false; 
+					for (const pslPath of this.paths.projectPsl) {
+						const pslClsNames = await getPslClsNames(pslPath);
+						if (pslClsNames.indexOf(token.value) >= 0) {
+							finder = await finder.newFinder(token.value);
+							foundPSL = true;
+						}
+					}
+						
+					
+					/*
 					// handle core class
 					const pslClsNames = await getPslClsNames(this.paths.corePsl);
 					if (pslClsNames.indexOf(token.value) >= 0) {
 						finder = await finder.newFinder(token.value);
 						continue;
-					}
-
-					// handle app class
-					let appPath = path.dirname(this.paths.activeRoutine);
-					const appClsNames = await getPslClsNames(appPath);
-					if (appClsNames.indexOf(token.value) >= 0) {
-						finder = await finder.newFinder(token.value);
-						continue;
-					}
+					} */
 
 					// skip over 'this'
-					else if (token.value === 'this' || token.value === this.procName) {
-						result = {
-							fsPath: this.paths.activeRoutine,
-						};
+					if(foundPSL) {
 						continue;
+					}else if (token.value === 'this' || token.value === this.procName) {
+							result = {
+								fsPath: this.paths.activeRoutine,
+							};
+							continue;
 					}
-					else {
-						result = await finder.searchParser(token);
-					}
+						else {
+							result = await finder.searchParser(token);
+					} 
 				}
 
 				if (!result || (result.fsPath === this.paths.activeRoutine && !result.member)) {
