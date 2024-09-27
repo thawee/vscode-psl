@@ -3,10 +3,14 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as jsonc from 'jsonc-parser';
 import * as os from 'os';
+import * as utils from '../hostCommands/hostCommandUtils'; 
 
 const configEnvCommand = 'psl.configureEnvironment';
+const preparePslCoreCommand = 'psl.setupPslCores';
 
 const LOCAL_ENV_DIR = path.join('.vscode', 'environment.json');
+const LOCAL_PSL_CORE_DIR = path.join('.vscode', 'pslcls');
+const icon = utils.icons.GET;
 
 const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 900);
 statusBar.command = configEnvCommand;
@@ -16,6 +20,12 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(
 		vscode.commands.registerCommand(
 			configEnvCommand, configureEnvironmentHandler
+		)
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand(
+			preparePslCoreCommand, setupPslCoreHandler
 		)
 	);
 
@@ -97,6 +107,49 @@ async function configureEnvironmentHandler() {
 	let workspace = await workspaceQuickPick();
 	if (!workspace) return;
 	environmentQuickPick(new WorkspaceFile(workspace.fsPath));
+}
+
+async function setupPslCoreHandler() {
+	let workspace = await workspaceQuickPick();
+	if (!workspace) return;
+	let env;
+	await utils.executeWithProgress(`${icon} SETUP pslcore procedures`, async () => {
+		let envs;
+		try {
+			envs = await utils.getEnvironment(workspace.fsPath);
+		}
+		catch (e) {
+			utils.logger.error(`${utils.icons.ERROR} ${icon} Invalid environment configuration.`);
+			return;
+		}
+		if (envs.length === 0) {
+			utils.logger.error(`${utils.icons.ERROR} ${icon} No environments selected.`);
+			return;
+		}
+		let choice = await utils.getCommandenvConfigQuickPick(envs);
+		if (!choice) return;
+		env = choice;
+		// get list of psl cores
+		let pslList = await preparePslCoreList(env);
+		utils.logger.info(`${utils.icons.WAIT} ${icon} SETUP ${pslList.length} pslcore procedures from ${env.name}`);
+		// get each psl
+		let connection = await utils.getConnection(env);
+		for(const psl of pslList) {
+			let fsPath = path.join(workspace.fsPath,LOCAL_PSL_CORE_DIR, psl+".PROC")
+			let output = await connection.get(fsPath);
+			fs.ensureDir(path.dirname(fsPath))
+			utils.writeFileWithSettings(fsPath, output); 
+		}
+		utils.logger.info(`${icon} SETUP pslcore procedures from ${env.name} succeeded`);
+	}).catch((e: Error) => {
+		if (env && env.name) {
+			utils.logger.error(`${utils.icons.ERROR} ${icon} error in ${env.name} ${e.message}`);
+		}
+		else {
+			utils.logger.error(`${utils.icons.ERROR} ${icon} ${e.message}`);
+		}
+	})
+	return;
 }
 
 async function environmentQuickPick(workspaceFile: WorkspaceFile) {
@@ -345,3 +398,16 @@ export class GlobalFile {
 		await vscode.window.showTextDocument(vscode.Uri.file(this.path));
 	}
 }
+
+async function preparePslCoreList(env: EnvironmentConfig):Promise<string[]> {
+	let connection = await utils.getConnection(env); 
+	try {
+		let ret = await connection.getPslCores(); 
+		return Promise.resolve(ret.split("\r\n")); 
+	}catch(e) {}
+	finally{
+		connection.close()
+	}
+	return Promise.resolve([]);
+}
+

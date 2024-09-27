@@ -22,7 +22,8 @@ export function* getTokens(documentContents: string): IterableIterator<Token> {
 export class Token {
 	type: Type;
 	value: string;
-	position: Position;
+	position: Position; 
+	routine?:boolean;
 
 	constructor(type: Type, value: string, position: Position) {
 		this.position = position;

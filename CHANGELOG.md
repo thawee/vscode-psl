@@ -9,11 +9,13 @@ file.
   that this change is similar to 1.12.2, as the 1.13 version is a split from
   1.12 for now.
 * Add get SCAER log command
-* Update Get Element to default element name from selected text on editor
+* Enable to default element name on Get Element from selected text on editor
 * Update Table Get and Get Elements to work from output panel
-* Update get element to search element and show matched results in quickpick
-* update provider to lookup PROC from defaultPslSources, can be override in configuration 
+* Update get element to search element and show matched results in quickpick, support different mumps name for proc and batch 
+* update provider to lookup PROC from defaultPslSources, support different mumps name for proc
 * update get element prompt to provide list of support element types
+* update select cursor to support $$ 
+* add Command `Setup PSlCore Procedures` to get all psl cores from host
 
 ## v1.13.3
 

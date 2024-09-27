@@ -19,8 +19,7 @@ export class MtmConnection {
 	private messageByte: string = String.fromCharCode(28);
 	private token: string = '';
 	private messageId: number = 0;
-	private maxRow: number = 30;
-	private hardRowLimit: number = 2000;
+	private maxRow: number = 30; 
 	private isSql: boolean = false;
 	private recordCount: number = 0;
 
@@ -70,6 +69,18 @@ export class MtmConnection {
 			throw new Error(err.toString());
 		}
 	}
+
+	async getPslCores():Promise<string> {
+		try {
+			let returnString = await this._getPslCores()
+			return returnString
+		}
+		catch (err) {
+			this.close();
+			throw new Error(err.toString());
+		}
+	}
+
 
 	async compileAndLink(fileName: string) {
 		try {
@@ -141,17 +152,6 @@ export class MtmConnection {
 		try {
 			this.isSql = true
 			let returnString = await this._sqlQuery(query)
-			return returnString
-		}
-		catch (err) {
-			this.close();
-			throw new Error(err.toString());
-		}
-	}
-
-	async sqlQueryAllResults(query: string) {
-		try {
-			let returnString = await this._sqlQueryAllResults(query)
 			return returnString
 		}
 		catch (err) {
@@ -291,69 +291,22 @@ export class MtmConnection {
 
 	private async _getSCAER(seq: string) {
 		let returnString: string;
-		//let selectStatement = `SELECT COUNT(*) FROM ERROR9 WHERE SEQ='${seq}' `;
-		//this.recordCount = Number(await this._sqlQuery(selectStatement))
-		let selectStatement = `SELECT * FROM ERROR9 WHERE SEQ='${seq}' `; 
-		returnString = await this._sqlQueryAllResults(selectStatement) ;
+		let selectStatement = `SELECT COUNT(*) FROM ERROR9 WHERE SEQ='${seq}' `;
+		this.recordCount = Number(await this._sqlQuery(selectStatement))
+		selectStatement = `SELECT * FROM ERROR9 WHERE SEQ='${seq}' `; 
+		returnString = await this._sqlQuery(selectStatement) ;
+		return returnString;
+	}
+
+	private async _getPslCores() {
+		let returnString: string;
+		let selectStatement = `SELECT COUNT(PROCID) FROM DBTBL25 WHERE PROCID LIKE 'PBS%' OR PROCID LIKE 'DBS%' OR PROCID LIKE 'UC%' OR PROCID LIKE 'FWK%' OR PROCID IN ('MSG', '%ENCRYPT')`;
+		this.recordCount = Number(await this._sqlQuery(selectStatement))
+		selectStatement = `SELECT PROCID FROM DBTBL25 WHERE PROCID LIKE 'PBS%' OR PROCID LIKE 'DBS%' OR PROCID LIKE 'UC%' OR PROCID LIKE 'FWK%' OR PROCID IN ('MSG', '%ENCRYPT') `; 
+		returnString = await this._sqlQuery(selectStatement) ;
 		return returnString;
 	}
 	
-	private async _sqlQueryAllResults(selectStatement: string) {
-		let returnString: string; 
-		selectStatement = selectStatement.toUpperCase()
-		if (!selectStatement.startsWith('SELECT')) {
-			throw new Error('Not a select query');
-		}
-		let fields =""; 
-		try {
-			// Find the starting index of "SELECT" and "FROM"
-			let startIndex = selectStatement.indexOf("SELECT") + "SELECT".length;
-			let endIndex = selectStatement.indexOf("FROM");
-
-			// Extract the fields between "SELECT" and "FROM"
-		    fields = selectStatement.substring(startIndex, endIndex).trim();
-
-			if(fields === "*") {
-				let table = utils.extractTableName(selectStatement);
-				if(table) {
-					let sql = "SELECT DI FROM DBTBL1D WHERE FID='"+table+"'";
-					let fieldString =  await this._sqlQuery(sql)
-					let results = fieldString.split("\r\n");
-					results = results.slice(1); // first field is number of record
-					fields = results.join("\t");
-					let columns = results.join(", ");
-					selectStatement = selectStatement.replace("*", columns);
-				   // endIndex = selectStatement.indexOf("FROM");
-				}
-			}else {
-				fields = fields.replace(",", "\t");
-			}
-
-			// Split the fields to get the first field
-			//let firstField = fields.split("\t")[0].trim();
-
-			// Replace the fields with COUNT(firstField)
-			//let countStatement = selectStatement.substring(0, startIndex) + ` COUNT(${firstField}) ` + selectStatement.substring(endIndex);
- 
-			//this.recordCount = Number(await this._sqlQuery(countStatement))
-			//if(this.recordCount > this.hardRowLimit) {
-			//	this.recordCount = this.hardRowLimit;
-			//}
-		}
-		catch (err) {
-			
-			//this.recordCount = 0;
-		}
-		this.isSql = false; 
-		this.recordCount = this.hardRowLimit;
-		returnString = await this._sqlQuery(selectStatement) 
-		if(fields) {
-			returnString = fields +"\r\n" + returnString;
-		}
-		return returnString;
-	}
-
-
 	private async _sqlQuery(selectQuery: string) {
 		selectQuery = selectQuery.toUpperCase()
 		if (!selectQuery.startsWith('SELECT')) {
@@ -385,16 +338,7 @@ export class MtmConnection {
 		if (this.isSql === false) {
 			while ((totalCount < this.recordCount)) {
 				splitReturnString = [];
-				let nextReturnString = "";
-				try {
-					 nextReturnString = await this.execute({ serviceClass: ServiceClass.SQL }, prepareString);
-				} catch (err) {
-						this.close();
-						this.recordCount = 0;
-						break;
-				//		throw new Error(err.toString());
-				} 
-
+				let nextReturnString = await this.execute({ serviceClass: ServiceClass.SQL }, prepareString);
 				splitReturnString = nextReturnString.split(String.fromCharCode(0))
 				totalCount = totalCount + Number(splitReturnString[0]);
 				returnString = returnString + '\r\n' + splitReturnString[1]

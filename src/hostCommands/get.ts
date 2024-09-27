@@ -393,7 +393,10 @@ function getElementList(quickpick: vscode.QuickPick<vscode.QuickPickItem>, elmNa
 					elmString = columnList[i].split('\t');
 					let label = elmString[0]+"."+elmType;
 					let desc = elmString[1];
-					if(elmString.length ==3) {
+					if('PROC' == elmType || 'BATCH' == elmType) {
+						desc = elmString[2];
+						desc = "["+elmString[1]+"] "+ desc;
+					}else if(elmString.length ==3) {
 						label = elmString[0]+"-"+elmString[1]+"."+elmType;
 						desc = elmString[2];
 					}
@@ -464,9 +467,9 @@ function getSQLForElementList(elmName: string, elmType: string) {
     }else if("PPL" == elmType) {
 		sql = "SELECT PID, DESC FROM DBTBL13 WHERE PID LIKE '"+elmName+"%'";
 	}else if("PROC" == elmType) {
-	   sql = "SELECT PROCID, DES FROM DBTBL25 WHERE PROCID LIKE '"+elmName+"%'";
+	   sql = "SELECT PROCID, PGM, DES FROM DBTBL25 WHERE PROCID LIKE '"+elmName+"%' OR PGM LIKE '"+elmName+"%'";
     }else if("BATCH" == elmType) {
-		sql = "SELECT BCHID, DES FROM DBTBL33 WHERE BCHID LIKE '"+elmName+"%'";
+		sql = "SELECT BCHID, PGM, DES FROM DBTBL33 WHERE BCHID LIKE '"+elmName+"%' OR PGM LIKE '"+elmName+"%'";
 	}else if("QRY" == elmType) {
 		sql = "SELECT QID, DESC FROM DBTBL4 WHERE QID LIKE '"+elmName+"%'";
 	}else if("RPT" == elmType) {
@@ -557,6 +560,8 @@ async function promptUserForElement(input: string, targetDirectory: string):Prom
 		quickpick.placeholder = "Element name and type (pick supported element type from list)";
 		quickpick.canSelectMany = false;
 		quickpick.ignoreFocusOut = true;
+		quickpick.matchOnDescription = true;
+        quickpick.matchOnDetail = true;
 		quickpick.value = input;
 		let searchMode:string = "TYPE";
 		try {
@@ -661,4 +666,27 @@ const DIR_MAPPINGS = {
 	'TBL': '',
 	'TRIG': 'dataqwik/trigger',
 	'SCAER': 'errorlog',
+}
+
+export async function getProcId(targetDirectory: string, value: string):Promise<string> {
+		let envs;
+		try {
+			envs = await utils.getEnvironment(targetDirectory);
+		}
+		catch (e) {
+			utils.logger.error(`${utils.icons.ERROR} ${icon} Invalid environment configuration.`);
+			return;
+		}
+		if (envs.length === 0) {
+			utils.logger.error(`${utils.icons.ERROR} ${icon} No environments selected.`);
+			return;
+		}
+		let choice = await utils.getCommandenvConfigQuickPick(envs);
+		if (!choice) return;
+		let env = choice; 
+		let connection = await utils.getConnection(env);
+		let sql = "SELECT PROCID FROM DBTBL25 WHERE PGM='"+value+"'";
+		let output = await connection.sqlQuery(sql);
+
+		return output;
 }

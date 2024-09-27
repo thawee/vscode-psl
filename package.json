@@ -2,7 +2,7 @@
   "name": "vscode-psl",
   "displayName": "vscode-psl",
   "description": "Profile Scripting Language support",
-  "version": "1.13.4-20240925",
+  "version": "1.13.4-20240927",
   "preview": true,
   "publisher": "ing-bank",
   "engines": {
@@ -25,7 +25,8 @@
     "onCommand:psl.compileAndLink",
     "onCommand:psl.runPSL",
     "onCommand:psl.launchHostTerminal",
-    "onCommand:psl.getSCAER"
+    "onCommand:psl.getSCAER",
+    "onCommand:psl.setupPslCores"
   ],
   "main": "./out/src/extension",
   "contributes": {
@@ -295,6 +296,11 @@
       {
         "command": "psl.previewDocumentation",
         "title": "Preview Documentation",
+        "category": "PSL"
+      },
+      {
+        "command": "psl.setupPslCores",
+        "title": "Setup PSLCore Procedures",
         "category": "PSL"
       }
     ],

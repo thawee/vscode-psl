@@ -1,6 +1,7 @@
 import * as fs from 'fs-extra';
 import * as jsonc from 'jsonc-parser';
 import * as path from 'path';
+import * as get from '../hostCommands/get';
 import { FinderPaths } from './config';
 import { Member, MemberClass, Method, ParsedDocument, parseText, Property } from './parser';
 import { Position, Token, Type } from './tokenizer';
@@ -38,12 +39,15 @@ export class ParsedDocFinder {
 			const result = await finder.searchParser(callTokens[0]);
 
 			// check for core class or tables
-			if (!result) { 
+			if (callTokens[0].routine || !result) { 
+			//if (!result) { 
 				// handle all psl sources
-				for (const pslPath of this.paths.projectPsl) {
+				let procName = await getProcId(this.paths.activeRoutine, callTokens[0].value)
+				let pslPaths = this.paths.projectPsl.reverse(); // make pslcore as last sequence
+				for (const pslPath of pslPaths) {
 					const pslClsNames = await getPslClsNames(pslPath);
-					if (pslClsNames.indexOf(callTokens[0].value) >= 0) {
-						finder = await finder.newFinder(callTokens[0].value);
+					if (pslClsNames.indexOf(procName) >= 0) {
+						finder = await finder.newFinder(procName);
 						return {
 							fsPath: finder.paths.activeRoutine,
 						};
@@ -96,15 +100,16 @@ export class ParsedDocFinder {
 
 				if (index === 0) {
 					// handle all psl sources
+					let procName = await getProcId(this.paths.activeRoutine, token.value)
 					let foundPSL = false; 
-					for (const pslPath of this.paths.projectPsl) {
+					let pslPaths = this.paths.projectPsl.reverse(); // make pslcore as last sequence
+					for (const pslPath of pslPaths) {
 						const pslClsNames = await getPslClsNames(pslPath);
-						if (pslClsNames.indexOf(token.value) >= 0) {
-							finder = await finder.newFinder(token.value);
+						if (pslClsNames.indexOf(procName) >= 0) {
+							finder = await finder.newFinder(procName);
 							foundPSL = true;
 						}
 					}
-						
 					
 					/*
 					// handle core class
@@ -345,12 +350,20 @@ interface Node {
 export function getCallTokens(tokensOnLine: Token[], index: number): Token[] {
 	const ret: Token[] = [];
 	let current = getChildNode(tokensOnLine, index);
-	if (!current) return ret;
+	if (!current) {
+		ret.forEach(tk=>{
+			tk.routine = current.routine;
+		});
+		return ret;
+	}
 	while (current.parent && current.token) {
 		ret.unshift(current.token);
 		current = current.parent;
 	}
 	if (current.token) ret.unshift(current.token);
+	ret.forEach(tk=>{
+		tk.routine = current.routine;
+	});
 	return ret;
 }
 
@@ -383,6 +396,21 @@ function getChildNode(tokensOnLine: Token[], index: number): Node | undefined {
 		if (!routineToken) return undefined;
 		return { parent: { token: routineToken, routine: true }, token: currentToken };
 	}
+
+	// merge to support cursor on $$
+	if (currentToken.isDollarSign()) {
+		let methodStartsAtIndex = -1;
+		if (previousToken && previousToken.isDollarSign()) {
+			methodStartsAtIndex = index + 1;
+		}
+		else if (nextToken && nextToken.isDollarSign()) {
+			methodStartsAtIndex = index + 2;
+		}
+		if (methodStartsAtIndex >= 0) {
+			return getChildNode(tokensOnLine, methodStartsAtIndex);
+		}
+	}
+
 	if (currentToken.isAlphanumeric()) {
 		return { token: currentToken, routine };
 	}
@@ -447,4 +475,20 @@ export function getCommentsOnLine(parsedDocument: ParsedDocument, lineNumber: nu
 	return parsedDocument.comments.filter(t => {
 		return t.position.line === lineNumber;
 	});
+}
+
+
+async function getProcId(activeScript: string, value: string):Promise<string> {
+	try {
+		let ret = get.getProcId(activeScript, value);
+		ret.then(val => {
+			if(val.trim().length > 0) {
+				return val;
+			}else {
+				return value;
+			}
+		});
+	}catch(error){};
+
+	return value;
 }
