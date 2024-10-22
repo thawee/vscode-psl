@@ -2,7 +2,7 @@
   "name": "vscode-psl",
   "displayName": "vscode-psl",
   "description": "Profile Scripting Language support",
-  "version": "1.13.4-20240927",
+  "version": "1.13.4-20241021",
   "preview": true,
   "publisher": "ing-bank",
   "engines": {
@@ -16,6 +16,7 @@
     "workspaceContains:dataqwik",
     "workspaceContains:.vscode/environment.json",
     "onLanguage:psl",
+    "onLanguage:plaintext",
     "onCommand:psl.getElement",
     "onCommand:psl.refreshElement",
     "onCommand:psl.getTable",
@@ -26,7 +27,8 @@
     "onCommand:psl.runPSL",
     "onCommand:psl.launchHostTerminal",
     "onCommand:psl.getSCAER",
-    "onCommand:psl.setupPslCores"
+    "onCommand:psl.setupPslCores",
+    "onCommand:psl.globalToCSV"
   ],
   "main": "./out/src/extension",
   "contributes": {
@@ -301,6 +303,11 @@
       {
         "command": "psl.setupPslCores",
         "title": "Setup PSLCore Procedures",
+        "category": "PSL"
+      },
+      {
+        "command": "psl.globalToCSV",
+        "title": "Profile Global to CSV",
         "category": "PSL"
       }
     ],

@@ -300,9 +300,9 @@ export class MtmConnection {
 
 	private async _getPslCores() {
 		let returnString: string;
-		let selectStatement = `SELECT COUNT(PROCID) FROM DBTBL25 WHERE PROCID LIKE 'PBS%' OR PROCID LIKE 'DBS%' OR PROCID LIKE 'UC%' OR PROCID LIKE 'FWK%' OR PROCID IN ('MSG', '%ENCRYPT')`;
+		let selectStatement = `SELECT COUNT(PROCID) FROM DBTBL25 WHERE PROCID LIKE 'PBS%' OR PROCID LIKE 'DBS%' OR PROCID LIKE 'UC%' OR PROCID LIKE 'FWK%' OR PROCID IN ('MSG', '%ENCRYPT','UTLERR')`;
 		this.recordCount = Number(await this._sqlQuery(selectStatement))
-		selectStatement = `SELECT PROCID FROM DBTBL25 WHERE PROCID LIKE 'PBS%' OR PROCID LIKE 'DBS%' OR PROCID LIKE 'UC%' OR PROCID LIKE 'FWK%' OR PROCID IN ('MSG', '%ENCRYPT') `; 
+		selectStatement = `SELECT PROCID FROM DBTBL25 WHERE PROCID LIKE 'PBS%' OR PROCID LIKE 'DBS%' OR PROCID LIKE 'UC%' OR PROCID LIKE 'FWK%' OR PROCID IN ('MSG', '%ENCRYPT', 'UTLERR') `; 
 		returnString = await this._sqlQuery(selectStatement) ;
 		return returnString;
 	}
