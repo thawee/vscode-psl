@@ -48,6 +48,7 @@ export async function ZWR2CSVHandler(context: utils.ExtensionCommandContext): Pr
 
                         // Join the remaining elements
                         keys = keyValues.join(',');
+
     
                         // Combine both parts into a single array
                         let values = part1Values.concat(part2Values);
@@ -65,7 +66,7 @@ export async function ZWR2CSVHandler(context: utils.ExtensionCommandContext): Pr
                         fileStreams[global].write(endLine+result);
                         endLine = '\n'; 
                     }
-                }else if (line.startsWith(' ') && keys) {
+                }else if (line.startsWith(' ') && global) {
                     let regex = /^(.+?)\)=(.+)$/;
                     line = line.trimStart();
                     let match = line.match(regex);
@@ -97,6 +98,7 @@ export async function ZWR2CSVHandler(context: utils.ExtensionCommandContext): Pr
                         endLine = '\n'; 
                     }
                 }else if (line && global && keys) {
+                    // to appended to previous line
                     let part2Values = line.split('|');
                     // Join the array into the desired format
                     let result = arrayToCSVLine(part2Values);
@@ -119,11 +121,14 @@ function arrayToCSVLine(arr: string[]): string {
             item = item.slice(1, -1);
         }
 
+        // Replace non-printable characters with $CH(ascii code)
+        item = item.replace(/[\x00-\x1F]/g, char => `$CH(${char.charCodeAt(0)})`);
+
         // Escape double quotes by replacing " with ""
         let escapedItem = item.replace(/"/g, '""');
         
-        // If the item contains a comma, double quote, single quote, space, or line break, wrap it in double quotes
-        if (/[",'\n ]/.test(escapedItem)) {
+        // If the item contains a comma, double quote, single quote, space, line break, or non-printable character, wrap it in double quotes
+        if (/[",'\n\t\r$]/.test(escapedItem)) {
             escapedItem = `"${escapedItem}"`;
         }
         
