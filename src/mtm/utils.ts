@@ -1,5 +1,6 @@
 import * as os from 'os';
 import * as path from 'path';
+import { StringDecoder } from 'string_decoder';
 
 interface FileDetails {
 	fileId: string
@@ -109,7 +110,7 @@ export function lv2vFormat(messageString: Buffer): Buffer[] {
 		if (bytePointer > messageLength) {
 			continue;
 		}
-		returnString.push(messageString.slice(bytePointer + numberOfBufferedLine, bytePointer + extractChar));
+		returnString.push(messageString.subarray(bytePointer + numberOfBufferedLine, bytePointer + extractChar));
 		bytePointer = bytePointer + extractChar;
 	}
 	return returnString
@@ -122,7 +123,12 @@ export function parseResponse(serviceClass: number, outputData: Buffer, encoding
 	returnArray = lv2vFormat(outputData);
 	returnArray = lv2vFormat(returnArray[1]);
 	returnArray = lv2vFormat(returnArray[1]);
-	returnString = returnArray[0].toString(encoding)
+ 
+	let decoder: StringDecoder = new StringDecoder(encoding); 
+	//const bencoding: BufferEncoding = 'utf16be' as BufferEncoding;
+	//returnString = returnArray[0].toString(bencoding)
+	returnString = decoder.write(returnArray[0]);
+	
 	if (returnString === 'ER') {
 		throw returnArray.map(x => x.toString(encoding)).join('')
 	}

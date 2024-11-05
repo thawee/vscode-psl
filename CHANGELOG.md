@@ -15,7 +15,7 @@ file.
 * update provider to lookup PROC from defaultPslSources, support different mumps name for proc
 * update get element prompt to provide list of support element types
 * update select cursor to support $$ 
-* add Command `Setup PSlCore Procedures` to get all psl cores from host
+* add Command `Setup Profile Workspace` to create source code directories and get all psl cores from host
 * add Command `Profile Global to CSV files` to convert Profile Global to CSV files 
 
 ## v1.13.3

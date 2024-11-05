@@ -55,7 +55,7 @@ async function refreshElement(fsPath: string) {
 		await doc.save();
 		let connection = await utils.getConnection(env);
 		let output = await connection.get(fsPath);
-		await utils.writeFileWithSettings(fsPath, output);
+		await utils.writeFileWithSettings(fsPath, output, env.encoding);
 		utils.logger.info(`${utils.icons.SUCCESS} ${icon} ${path.basename(fsPath)} REFRESH from ${env.name} succeeded`);
 		connection.close();
 		await vscode.window.showTextDocument(doc);
@@ -106,7 +106,7 @@ async function refreshTable(tableName: string, targetDirectory: string) {
 			const contentArray = content.split(String.fromCharCode(1));
 			const fileName = contentArray[0];
 			const fileContent = contentArray[1];
-			return utils.writeFileWithSettings(path.join(targetDirectory, fileName), fileContent);
+			return utils.writeFileWithSettings(path.join(targetDirectory, fileName), fileContent,env.encoding);
 		});
 		await Promise.all(promises);
 		utils.logger.info(`${utils.icons.SUCCESS} ${icon} ${tableName} TABLE REFRESH from ${env.name} succeeded`);

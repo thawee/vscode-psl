@@ -122,7 +122,7 @@ export async function getCommandenvConfigQuickPick(envs: environment.Environment
 	return choice.env;
 }
 
-export function writeFileWithSettings(fsPath: string, output: string): Promise<void> {
+export function writeFileWithSettings(fsPath: string, output: string, encoding: BufferEncoding): Promise<void> {
 	const trailingNewline: NEWLINE_SETTING = vscode.workspace.getConfiguration('psl', vscode.Uri.file(fsPath)).get('trailingNewline');
 	switch (trailingNewline) {
 		case NEWLINE_SETTING.ALWAYS:
@@ -133,8 +133,11 @@ export function writeFileWithSettings(fsPath: string, output: string): Promise<v
 			break;
 		default:
 			break;
-	}
-	return fs.writeFile(fsPath, output);
+	} 
+	//return fs.writeFile(fsPath, output);
+	//const buffer = Buffer.from(output, encoding);
+	//output = buffer.toString(encoding);
+	return fs.writeFile(fsPath, output, encoding);
 }
 
 /**

@@ -2,7 +2,7 @@
   "name": "vscode-psl",
   "displayName": "vscode-psl",
   "description": "Profile Scripting Language support",
-  "version": "1.13.4-20241023",
+  "version": "1.13.4-20241029",
   "preview": true,
   "publisher": "ing-bank",
   "engines": {
@@ -27,7 +27,7 @@
     "onCommand:psl.runPSL",
     "onCommand:psl.launchHostTerminal",
     "onCommand:psl.getSCAER",
-    "onCommand:psl.setupPslCores",
+    "onCommand:psl.setupPrfWorkspace",
     "onCommand:psl.globalToCSV"
   ],
   "main": "./out/src/extension",
@@ -188,7 +188,7 @@
       "[profileTable]": {
         "editor.insertSpaces": false
       }
-    }, 
+    },
     "commands": [
       {
         "command": "psl.setGtmDebug",
@@ -233,7 +233,7 @@
         "command": "psl.getSCAER",
         "title": "Get SCAER log from Host",
         "category": "PSL"
-      }, 
+      },
       {
         "command": "psl.testCompile",
         "title": "Test Compile",
@@ -301,8 +301,8 @@
         "category": "PSL"
       },
       {
-        "command": "psl.setupPslCores",
-        "title": "Setup PSLCore Procedures",
+        "command": "psl.setupPrfWorkspace",
+        "title": "Setup Profile Workspace",
         "category": "PSL"
       },
       {
@@ -327,7 +327,7 @@
           "when": "explorerResourceIsFolder",
           "command": "psl.getTable",
           "group": "PSL.3"
-        }, 
+        },
         {
           "when": "explorerResourceIsFolder",
           "command": "psl.testCompile",
@@ -767,7 +767,7 @@
         "command": "psl.launchHostTerminal",
         "key": "win+oem_3"
       },
-      { 
+      {
         "command": "psl.getElement",
         "key": "cmd+g"
       }
@@ -880,6 +880,7 @@
     "typescript": "^4.8.4"
   },
   "dependencies": {
+    "chardet": "^2.0.0",
     "fs-extra": "^10.1.0",
     "jsonc-parser": "^3.2.0",
     "minimatch": "^5.1.0",

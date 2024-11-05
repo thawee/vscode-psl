@@ -26,7 +26,7 @@ export class MtmConnection {
 	constructor(private serverType: string = 'SCA$IBS', private encoding: BufferEncoding = 'utf8') { }
 
 	async open(host: string, port: number, profileUsername: string, profilePassword: string) {
-		await this.socket.connect(port, host);
+		await this.socket.connect(port, host); 
 		let prepareString = utils.connectionObject(profileUsername, profilePassword);
 		let returnArray = await this.execute({ serviceClass: ServiceClass.CONNECTION }, prepareString);
 		this.token = returnArray;
@@ -300,9 +300,9 @@ export class MtmConnection {
 
 	private async _getPslCores() {
 		let returnString: string;
-		let selectStatement = `SELECT COUNT(PROCID) FROM DBTBL25 WHERE PROCID LIKE 'PBS%' OR PROCID LIKE 'DBS%' OR PROCID LIKE 'UC%' OR PROCID LIKE 'FWK%' OR PROCID IN ('MSG', '%ENCRYPT','UTLERR')`;
+		let selectStatement = `SELECT COUNT(PROCID) FROM DBTBL25 WHERE PROCID LIKE 'PBS%' OR PROCID LIKE 'Pbs%' OR PROCID LIKE 'DB%' OR PROCID LIKE 'Db%' OR PROCID LIKE 'UC%' OR PROCID LIKE 'SQL%' OR PROCID LIKE 'Sql%' OR PROCID LIKE 'Prf%' OR PROCID LIKE 'Fwk%' OR PROCID LIKE 'PSL%' OR PROCID LIKE 'Psl%' OR PROCID LIKE '%%%' OR PROCID IN ('MSG', 'UTLERR') `;
 		this.recordCount = Number(await this._sqlQuery(selectStatement))
-		selectStatement = `SELECT PROCID FROM DBTBL25 WHERE PROCID LIKE 'PBS%' OR PROCID LIKE 'DBS%' OR PROCID LIKE 'UC%' OR PROCID LIKE 'FWK%' OR PROCID IN ('MSG', '%ENCRYPT', 'UTLERR') `; 
+		selectStatement = `SELECT PROCID FROM DBTBL25 WHERE PROCID LIKE 'PBS%' OR PROCID LIKE 'Pbs%' OR PROCID LIKE 'DB%' OR PROCID LIKE 'Db%' OR PROCID LIKE 'UC%' OR PROCID LIKE 'SQL%' OR PROCID LIKE 'Sql%' OR PROCID LIKE 'Prf%' OR PROCID LIKE 'Fwk%' OR PROCID LIKE 'PSL%' OR PROCID LIKE 'Psl%' OR PROCID LIKE '%%%' OR PROCID IN ('MSG', 'UTLERR') `; 
 		returnString = await this._sqlQuery(selectStatement) ;
 		return returnString;
 	}
@@ -374,7 +374,8 @@ export class MtmConnection {
 			messageLength = messageLength + nextMessage.length;
 			message = Buffer.concat([message, nextMessage], messageLength);
 		}
-		return (utils.parseResponse(detail.serviceClass, message.slice(startByte, message.length), this.encoding));
+		//return (utils.parseResponse(detail.serviceClass, message.slice(startByte, message.length), this.encoding));
+		return (utils.parseResponse(detail.serviceClass, message.subarray(startByte, message.length), this.encoding));
 	}
 
 	private prepareSendingMessage(detail: ServiceDetail, prepareString: string): string {

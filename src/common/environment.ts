@@ -6,7 +6,7 @@ import * as os from 'os';
 import * as utils from '../hostCommands/hostCommandUtils'; 
 
 const configEnvCommand = 'psl.configureEnvironment';
-const preparePslCoreCommand = 'psl.setupPslCores';
+const setupPrfWorkspaceCommand = 'psl.setupPrfWorkspace';
 
 const LOCAL_ENV_DIR = path.join('.vscode', 'environment.json');
 const LOCAL_PSL_CORE_DIR = path.join('.vscode', 'pslcls');
@@ -25,7 +25,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand(
-			preparePslCoreCommand, setupPslCoreHandler
+			setupPrfWorkspaceCommand, setupPrfWorkspaceHandler
 		)
 	);
 
@@ -109,11 +109,11 @@ async function configureEnvironmentHandler() {
 	environmentQuickPick(new WorkspaceFile(workspace.fsPath));
 }
 
-async function setupPslCoreHandler() {
+async function setupPrfWorkspaceHandler() {
 	let workspace = await workspaceQuickPick();
 	if (!workspace) return;
 	let env;
-	await utils.executeWithProgress(`${icon} SETUP pslcore procedures`, async () => {
+	await utils.executeWithProgress(`${icon} SETUP Profile Workspace`, async () => {
 		let envs;
 		try {
 			envs = await utils.getEnvironment(workspace.fsPath);
@@ -129,18 +129,34 @@ async function setupPslCoreHandler() {
 		let choice = await utils.getCommandenvConfigQuickPick(envs);
 		if (!choice) return;
 		env = choice;
+
+		utils.logger.info(`${utils.icons.WAIT} ${icon} Create source code directories`);
+		mkdirs(workspace.fsPath, "dataqwik/batch");
+		mkdirs(workspace.fsPath, "dataqwik/index");
+		mkdirs(workspace.fsPath, "dataqwik/journal");
+		mkdirs(workspace.fsPath, "dataqwik/procedure");
+		mkdirs(workspace.fsPath, "dataqwik/query");
+		mkdirs(workspace.fsPath, "dataqwik/report");
+		mkdirs(workspace.fsPath, "dataqwik/screen");
+		mkdirs(workspace.fsPath, "dataqwik/table");
+		mkdirs(workspace.fsPath, "dataqwik/trigger");
+		mkdirs(workspace.fsPath, "data");
+		mkdirs(workspace.fsPath, "routine");
+		mkdirs(workspace.fsPath, "property");
+
 		// get list of psl cores
 		let pslList = await preparePslCoreList(env);
-		utils.logger.info(`${utils.icons.WAIT} ${icon} SETUP ${pslList.length} pslcore procedures from ${env.name}`);
+		utils.logger.info(`${utils.icons.WAIT} ${icon} Pull ${pslList.length} core procedures from ${env.name}`);
 		// get each psl
 		let connection = await utils.getConnection(env);
 		for(const psl of pslList) {
 			let fsPath = path.join(workspace.fsPath,LOCAL_PSL_CORE_DIR, psl+".PROC")
 			let output = await connection.get(fsPath);
 			fs.ensureDir(path.dirname(fsPath))
-			utils.writeFileWithSettings(fsPath, output); 
+			utils.writeFileWithSettings(fsPath, output, env.encoding); 
 		}
-		utils.logger.info(`${icon} SETUP pslcore procedures from ${env.name} succeeded`);
+
+		utils.logger.info(`${icon} SETUP Profile Workspace for ${env.name} succeeded`);
 	}).catch((e: Error) => {
 		if (env && env.name) {
 			utils.logger.error(`${utils.icons.ERROR} ${icon} error in ${env.name} ${e.message}`);
@@ -409,5 +425,10 @@ async function preparePslCoreList(env: EnvironmentConfig):Promise<string[]> {
 		connection.close()
 	}
 	return Promise.resolve([]);
+}
+
+function mkdirs(fsPath: string, dirs: string) {
+	let newFolderPath = path.join(fsPath, dirs);
+	fs.mkdir(newFolderPath, { recursive: true });
 }
 

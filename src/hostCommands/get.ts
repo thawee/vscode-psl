@@ -211,7 +211,7 @@ async function getElement(fsPath: string) {
 		let connection = await utils.getConnection(env);
 		let output = await connection.get(fsPath);
 		await fs.ensureDir(path.dirname(fsPath))
-		await utils.writeFileWithSettings(fsPath, output);
+		await utils.writeFileWithSettings(fsPath, output,env.encoding);
 		utils.logger.info(`${utils.icons.SUCCESS} ${icon} ${path.basename(fsPath)} GET from ${env.name} succeeded`);
 		connection.close();
 		await vscode.workspace.openTextDocument(fsPath).then(vscode.window.showTextDocument)
@@ -255,7 +255,7 @@ async function getTable(tableName: string, targetDirectory: string, workpacePath
 			const contentArray = content.split(String.fromCharCode(1));
 			const fileName = contentArray[0];
 			const fileContent = contentArray[1];
-			return utils.writeFileWithSettings(path.join(targetDirectory, tableName.toLowerCase(), fileName), fileContent);
+			return utils.writeFileWithSettings(path.join(targetDirectory, tableName.toLowerCase(), fileName), fileContent,env.encoding);
 		});
 		await Promise.all(promises);
 		utils.logger.info(`${utils.icons.SUCCESS} ${icon} ${tableName} TABLE GET from ${env.name} succeeded`);
@@ -294,7 +294,7 @@ async function getSCAER(scaseq: string, targetDirectory: string) {
 		let connection = await utils.getConnection(env);
 		let output = await connection.getSCAER(scaseq);
 		await fs.ensureDir(path.dirname(fsPath))
-		await utils.writeFileWithSettings(fsPath, output);
+		await utils.writeFileWithSettings(fsPath, output, env.encoding);
 		utils.logger.info(`${utils.icons.SUCCESS} ${icon} ${scaseq} SCAER GET from ${env.name} succeeded`);
 		connection.close();
 		await vscode.workspace.openTextDocument(fsPath).then(vscode.window.showTextDocument)

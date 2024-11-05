@@ -50,6 +50,7 @@ Commands to communicate with the Host via MRPC121 can be executed via the Comman
 * `Table Send to Host`: Sends all existing elements related to the table
 * `Test Compile`: Test compiles PSL
 * `get SCAER log from Host`: Get Profile ERROR log and variables 
+* `Setup Profile Workspace`: Create source code directories and pull psl cores from host
 * `Profile Global to CSV files` : Convert Profile Global to CSV file
 
 > Please note that the Host Communication is done *asynchronously*, meaning that vscode will not require you to wait to finish one action before you start another. This may have unintended consequences if you do not wait. For example, you must wait for sending to finish before you compile and link.
