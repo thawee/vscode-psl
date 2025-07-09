@@ -63,6 +63,7 @@ Two commands `Get Element from Host` and `Table Get from Host` will allow you to
 |---|---|
 BATCH | `dataqwik/batch/` |
 DAT | `data/` |
+G | `data/` |
 FKY | `dataqwik/foreign_key/` |
 IDX | `dataqwik/index/` |
 JFD | `dataqwik/journal/` |
@@ -168,3 +169,6 @@ Once you clone the project, from the command line in the root of this project, r
 For ideas on features to implement, visit the below link:
 
 https://code.visualstudio.com/docs/extensions/language-support
+
+to build vsix package
+vsce package

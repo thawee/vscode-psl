@@ -8,15 +8,17 @@ file.
 * Update the `json5` dependency to 2.2.3 and increment version numbers. Note
   that this change is similar to 1.12.2, as the 1.13 version is a split from
   1.12 for now.
-* Add get SCAER log command
-* Enable to default element name on Get Element from selected text on editor
-* Update Table Get and Get Elements to work from output panel
-* Update get element to search element and show matched results in quickpick, support different mumps name for proc and batch 
-* update provider to lookup PROC from defaultPslSources, support different mumps name for proc
-* update get element prompt to provide list of support element types
-* update select cursor to support $$ 
-* add Command `Setup Profile Workspace` to create source code directories and get all psl cores from host
-* add Command `Profile Global to CSV files` to convert Profile Global to CSV files 
+* Extras features
+*   Add get SCAER log command
+*   Enable to default element name on Get Element from selected text on editor
+*   Update Table Get and Get Elements to work from output panel
+*   Update get element to search element and show matched results in quickpick, support different mumps name for proc and batch 
+*   update provider to lookup PROC from defaultPslSources, support different mumps name for proc
+*   update get element prompt to provide list of support element types
+*   update select cursor to support $$ 
+*   add Command `Setup Profile Workspace` to create source code directories and get all psl cores from host
+*   add Command `Profile Global to CSV files` to convert Profile Global to CSV files 
+*   Add support for Data (.DAT and .G)
 
 ## v1.13.3
 

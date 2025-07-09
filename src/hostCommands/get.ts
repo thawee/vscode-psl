@@ -311,7 +311,7 @@ async function getSCAER(scaseq: string, targetDirectory: string) {
 
 function getElementTypes(quickpick: vscode.QuickPick<vscode.QuickPickItem>) {
 	let topPickedTypes:string[] = ['PROC','BATCH','TRIG'];
-	let supportedTypes:string[] = ['FKY','IDX','JFD','PPL','QRY','RPT','SCR'];
+	let supportedTypes:string[] = ['FKY','IDX','JFD','PPL','QRY','RPT','SCR','DAT','G'];
 	let items: vscode.QuickPickItem[] = [];
 
 	let item : vscode.QuickPickItem = {
@@ -646,7 +646,7 @@ const DIR_MAPPINGS = {
 	'COL': '',
 	'DAT': 'data',
 	'FKY': 'dataqwik/foreign_key',
-	// 'G': 'Global',
+    'G': 'data',
 	'IDX': 'dataqwik/index',
 	'JFD': 'dataqwik/journal',
 	'm': 'routine',

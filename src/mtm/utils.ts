@@ -13,7 +13,7 @@ export const extensionToDescription: { [key: string]: string } = {
 	'COL': 'Column',
 	'DAT': 'Data',
 	'FKY': 'Foreign Key',
-	// 'G': 'Global',
+    'G': 'Data',
 	'IDX': 'Index',
 	'JFD': 'Journal',
 	'm': 'M routine',

@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import * as fs from 'fs'; 
 import * as utils from '../hostCommands/hostCommandUtils';
 
-export async function ZWR2CSVHandler(context: utils.ExtensionCommandContext): Promise<void> {
+export async function ZWR2CSVHandler(): Promise<void> {
     const editor = vscode.window.activeTextEditor; 
 		if(editor) {
 			 
@@ -19,9 +19,8 @@ export async function ZWR2CSVHandler(context: utils.ExtensionCommandContext): Pr
              let keys = '';
              let global = "";
              let endLine = '';
-            lines.forEach((line, index) => {
+            lines.forEach((line) => {
                 if (line.startsWith('Global ^')) {
-                    //let regex = /^Global \^(\w+)\((.+)\,$/;
                     let regex = /^Global \^(\w+)\((.+)$/;
                     let match = line.match(regex);
 
@@ -54,7 +53,7 @@ export async function ZWR2CSVHandler(context: utils.ExtensionCommandContext): Pr
                         let values = part1Values.concat(part2Values);
                         
                         // Join the array into the desired format
-                        let result = arrayToCSVLine(values); //values.join(',');
+                        let result = arrayToCSVLine(values); 
 
                         global = getGlobal(match[0]);
 
@@ -87,7 +86,7 @@ export async function ZWR2CSVHandler(context: utils.ExtensionCommandContext): Pr
                         let values = part1Values.concat(part2Values);
                         
                         // Join the array into the desired format
-                        let result = arrayToCSVLine(values); // values.join(','); 
+                        let result = arrayToCSVLine(values); 
 
                         if (!fileStreams[global]) {
                             let filePath = getFileName(fileName, global);
